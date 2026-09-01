@@ -1,32 +1,55 @@
 import { getSizeLabel } from "@/data/sizes";
 import type { CartItem } from "@/types";
 
-export const WHATSAPP_PHONE = "5492302354906";
+export const WHATSAPP_PHONE = "5492994604920";
 
 const MAX_LISTED_ITEMS = 15;
 
-function buildItemBlock(item: CartItem, baseUrl: string): string {
-  const imageUrl = `${baseUrl}${item.product.imagePath}`;
-  return `${item.product.name}\n- Talle ${getSizeLabel(item.size)}\n\nVer foto: ${imageUrl}`;
+/**
+ * Click-to-chat endpoint. `wa.me` redirects corrupt 4-byte emojis (shown as �).
+ * `api.whatsapp.com/send` preserves the encoded UTF-8 in the prefilled text.
+ */
+const WHATSAPP_SEND_URL = "https://api.whatsapp.com/send";
+
+function formatItemCount(count: number): string {
+  return count === 1 ? "1 pijama" : `${count} pijamas`;
 }
 
-function buildMessageBody(
-  items: CartItem[],
-  siteBaseUrl: string,
+function buildItemBlock(
+  item: CartItem,
+  baseUrl: string,
+  index: number | null,
 ): string {
+  const imageUrl = `${baseUrl}${item.product.imagePath}`;
+  const title =
+    index === null
+      ? `*${item.product.name}*`
+      : `*${index}. ${item.product.name}*`;
+
+  return [
+    title,
+    `Talle: *${getSizeLabel(item.size)}*`,
+    `Foto: ${imageUrl}`,
+  ].join("\n");
+}
+
+function buildMessageBody(items: CartItem[], siteBaseUrl: string): string {
   const baseUrl = siteBaseUrl.replace(/\/$/, "");
   const listedItems = items.slice(0, MAX_LISTED_ITEMS);
   const remaining = items.length - listedItems.length;
+  const numbered = listedItems.length > 1;
 
-  const blocks = listedItems.map((item) => buildItemBlock(item, baseUrl));
+  const blocks = listedItems.map((item, index) =>
+    buildItemBlock(item, baseUrl, numbered ? index + 1 : null),
+  );
 
-  let message = `🛍️ NUEVO PEDIDO\n\n${blocks.join("\n\n")}`;
+  let message = `🛍️ *NUEVO PEDIDO*\n\n${blocks.join("\n\n")}`;
 
   if (remaining > 0) {
-    message += `\n\n... y ${remaining} más.\nVer catálogo completo: ${baseUrl}`;
+    message += `\n\n… y ${remaining} más.\nCatálogo: ${baseUrl}`;
   }
 
-  message += `\n\nTotal: ${items.length} pijama(s) seleccionado(s)`;
+  message += `\n\n*Total: ${formatItemCount(items.length)}*`;
   return message;
 }
 
@@ -40,7 +63,7 @@ export function buildWhatsAppUrl(
   }
 
   const message = buildMessageBody(items, siteBaseUrl);
-  return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+  return `${WHATSAPP_SEND_URL}?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
 }
 
 export function buildSingleItemWhatsAppUrl(
