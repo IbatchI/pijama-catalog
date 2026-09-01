@@ -3,12 +3,13 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { getSizeLabel } from "@/data/sizes";
 import { XIcon } from "lucide-react";
-import type { CartItem } from "@/types";
+import type { CartItem, Size } from "@/types";
 
 interface CartItemRowProps {
   item: CartItem;
-  onRemove: (productId: string) => void;
+  onRemove: (productId: string, size: Size) => void;
 }
 
 export function CartItemRow({ item, onRemove }: CartItemRowProps) {
@@ -35,13 +36,16 @@ export function CartItemRow({ item, onRemove }: CartItemRowProps) {
         <p className="truncate text-sm font-medium text-foreground">
           {item.product.name}
         </p>
+        <p className="text-xs text-muted-foreground">
+          {getSizeLabel(item.size)}
+        </p>
       </div>
       <Button
         type="button"
         variant="ghost"
         size="icon-sm"
-        aria-label={`Eliminar ${item.product.name}`}
-        onClick={() => onRemove(item.product.id)}
+        aria-label={`Eliminar ${item.product.name}, talle ${getSizeLabel(item.size)}`}
+        onClick={() => onRemove(item.product.id, item.size)}
       >
         <XIcon data-icon="inline-start" />
       </Button>

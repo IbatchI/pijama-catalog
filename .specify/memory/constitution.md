@@ -1,20 +1,19 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 1.1.0
-Modified principles: N/A — initial authoring from blank template
-Modified principles: Added Principle VI (Code Architecture)
+Version change: 1.1.0 → 1.2.0
+Modified principles:
+  - III. Card-Grid Catalog UI → expanded with size pills + conditional CTAs
+  - II. WhatsApp-Driven Commerce → message MUST include selected size per item
+  - IV. Cart & Checkout Simplicity → cart items MUST carry size; one size per line item
 Added sections:
-  - Core Principles (6 principles defined)
-  - Tech Stack & Constraints (hooks/ directory, configurable theme)
-  - Development Workflow
-  - Governance
+  - Size catalog (fixed enum) under Tech Stack & Constraints
 Removed sections: N/A
 Deferred TODOs:
   - WHATSAPP_PHONE_NUMBER: Owner must supply the destination WhatsApp number in .env / config
   - WHATSAPP_API_PROVIDER: Confirm whether using WhatsApp Business Cloud API (Meta) or a third-party
     gateway (e.g. Twilio, 360dialog). Affects message format and image-attachment approach.
-  - ITEMS_PER_PAGE: Decide the default pagination page size (suggested: 12 per page).
+  - ITEMS_PER_PAGE: Resolved at 15 in implementation; constitution default remains documented.
 -->
 
 # Catálogo de Pijamas — Constitution
@@ -37,6 +36,7 @@ Every purchase intent MUST be converted into a WhatsApp message sent to the owne
 The message payload MUST include, at minimum:
 
 - A human-readable list of selected pajama(s) with their identifier/name.
+- The selected size for each item (label + numeric range, e.g. "M 42/44").
 - A direct image link (publicly accessible URL) for each selected item so the recipient
   can visually confirm the order at a glance.
 - A clear call-to-action summary (e.g. total item count).
@@ -47,23 +47,37 @@ the chosen provider (see TODO: WHATSAPP_API_PROVIDER).
 
 **Rationale**: WhatsApp is the primary communication channel for the target audience.
 Keeping the purchase loop inside WhatsApp eliminates friction and avoids payment-gateway
-complexity for the MVP.
+complexity for the MVP. Including the size in every message prevents back-and-forth with
+the buyer.
 
 ### III. Card-Grid Catalog UI
 
 The catalog MUST be rendered as a responsive grid of product cards. Each card MUST display:
 
 - The product photo (primary visual element, aspect-ratio preserved).
-- A product name/label.
-- An "Agregar al carrito" (add-to-cart) action.
-- A "Lo quiero" direct-purchase shortcut.
+- A row of size pills (toggle buttons) with the fixed size catalog defined in this
+  constitution. Exactly one size MAY be selected at a time per card.
+- "Agregar al carrito" and "Lo quiero" actions — visible ONLY after the user selects a size.
+
+Size pills MUST use the following fixed labels (non-configurable without a constitution
+amendment):
+
+| Label | Display text |
+|-------|--------------|
+| S     | S 38/40      |
+| M     | M 42/44      |
+| L     | L 46/48      |
+| XL    | XL 50/52     |
+
+The selected pill MUST have a visually distinct active state (semantic tokens only).
+No product name or price is required on the card surface in the grid view.
 
 The UI MUST be mobile-first and adapt gracefully to tablet and desktop viewports.
 The visual style MUST be sober and professional: neutral palette, clean typography,
 ample white space — no loud or decorative motifs.
 
-**Rationale**: The catalog is a sales tool shared via WhatsApp link. First impressions on
-mobile are critical; clarity and trustworthiness drive conversions.
+**Rationale**: Requiring size selection before any purchase action reduces order errors
+and incomplete WhatsApp messages. Pills are compact, touch-friendly, and familiar on mobile.
 
 ### IV. Cart & Checkout Simplicity
 
@@ -71,15 +85,18 @@ A persistent, in-page cart MUST allow users to accumulate multiple items before 
 The cart MUST:
 
 - Display a running count of selected items (visible at all times, e.g. floating badge).
+- Store each line item as product + selected size (same product with different sizes
+  counts as separate line items).
 - Allow item removal without page reload.
-- Present a summary view before finalizing.
-- Finalize by constructing and opening a WhatsApp deep-link with the full order details.
+- Present a summary view before finalizing, showing product name, size, and thumbnail.
+- Finalize by constructing and opening a WhatsApp deep-link with the full order details
+  including size per item.
 
 No user accounts, no persistent server-side state, and no payment processing are in scope
 for v1. Cart state lives exclusively in browser memory (or localStorage for resilience).
 
-**Rationale**: Keeping state client-only removes all backend coupling. If the user closes
-the tab, the next WhatsApp interaction with the owner restarts the loop naturally.
+**Rationale**: Keeping state client-only removes all backend coupling. Size-aware line items
+ensure the seller receives complete orders without follow-up questions.
 
 ### V. Catalog Simplicity — No Premature Complexity
 
@@ -103,9 +120,9 @@ Every file MUST have exactly one reason to change:
 - `components/` — JSX only; components consume hooks and render output; they MUST NOT
   import stores or lib directly.
 
-Custom hooks (`useCart`, `usePagination`, `useWhatsApp`) are the ONLY bridge between
-state/logic and the component layer. Components that contain `if` branches for non-render
-logic are a violation of this principle and MUST be refactored.
+Custom hooks (`useCart`, `usePagination`, `useWhatsApp`, `useSizeSelection`) are the
+ONLY bridge between state/logic and the component layer. Components that contain `if`
+branches for non-render logic are a violation of this principle and MUST be refactored.
 
 The design system MUST be defined in a single CSS file (`app/globals.css`) using
 Tailwind v4 CSS variables. No raw color values, no `dark:` prefixes, and no `style=`
@@ -124,7 +141,11 @@ grows. A centralized, token-based theme lets the owner retheme the entire app by
   out of the box). No CSS-in-JS runtime. All brand tokens defined in `app/globals.css`
   under `@theme`; semantic role tokens in `:root`. Components use semantic classes only.
 - **Custom hooks**: All business logic lives in `hooks/` (`useCart`, `usePagination`,
-  `useWhatsApp`). Components import hooks exclusively — never stores or lib utilities directly.
+  `useWhatsApp`, `useSizeSelection`). Components import hooks exclusively — never stores
+  or lib utilities directly.
+- **Size catalog**: Fixed enum in `types/index.ts` — `S | M | L | XL` with display labels
+  `S 38/40`, `M 42/44`, `L 46/48`, `XL 50/52`. Adding or removing sizes requires a
+  constitution amendment.
 - **Images**: Source photos live in `public/images/` (copied from the `Fotos pijamas` folder).
   Images MUST be served from the same static host so their public URLs can be embedded in
   WhatsApp messages.
@@ -135,18 +156,19 @@ grows. A centralized, token-based theme lets the owner retheme the entire app by
 - **No external database or CMS** for v1. Product catalog is defined in a static JSON/TS
   data file co-located with the source code.
 - **No authentication** required for the public-facing catalog.
-- **Pagination**: TODO(ITEMS_PER_PAGE) — default suggestion is 12 items per page.
+- **Pagination**: 15 items per page (as implemented).
 
 ## Development Workflow
 
 - All product data changes (add/remove/rename items) MUST be made in the catalog data file;
-  no schema changes require a constitution amendment.
+  no schema changes require a constitution amendment unless they affect governed entities
+  (e.g. adding a new size requires a constitution amendment).
 - Images MUST be optimized (compressed, reasonable max dimensions) before committing to the
   repo to keep clone and build times acceptable.
 - Feature branches MUST be used for any change beyond copy/image updates.
 - The static build MUST pass without errors before any deployment.
 - WhatsApp link construction logic MUST be unit-tested with at least one happy-path test
-  covering the multi-item cart scenario.
+  covering the multi-item cart scenario including size labels.
 
 ## Governance
 
@@ -162,4 +184,4 @@ All contributors MUST verify compliance with these principles during code review
 Complexity introductions (new dependencies, server-side logic, auth, etc.) MUST be justified
 against these principles before merging.
 
-**Version**: 1.1.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-08-31
+**Version**: 1.2.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-08-31

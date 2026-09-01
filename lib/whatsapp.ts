@@ -1,3 +1,4 @@
+import { getSizeLabel } from "@/data/sizes";
 import type { CartItem } from "@/types";
 
 export const WHATSAPP_PHONE = "5492302354906";
@@ -14,7 +15,7 @@ function buildMessageBody(
 
   const lines = listedItems.map((item, index) => {
     const imageUrl = `${baseUrl}${item.product.imagePath}`;
-    return `${index + 1}. ${item.product.name}\n   📷 ${imageUrl}`;
+    return `${index + 1}. ${item.product.name}\n   Talle: ${getSizeLabel(item.size)}\n   📷 ${imageUrl}`;
   });
 
   let message = `Hola! Me interesan estos pijamas:\n\n${lines.join("\n\n")}`;

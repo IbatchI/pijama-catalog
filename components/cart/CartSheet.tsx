@@ -16,13 +16,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { CartItem } from "@/types";
+import type { CartItem, Size } from "@/types";
 
 interface CartSheetProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
-  onRemoveItem: (productId: string) => void;
+  onRemoveItem: (productId: string, size: Size) => void;
   onCheckout: () => void;
 }
 
@@ -53,7 +53,7 @@ export function CartSheet({
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4">
             {items.map((item) => (
               <CartItemRow
-                key={item.product.id}
+                key={`${item.product.id}:${item.size}`}
                 item={item}
                 onRemove={onRemoveItem}
               />

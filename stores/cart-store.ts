@@ -1,40 +1,48 @@
 import { createStore } from "zustand/vanilla";
 
-import type { CartItem, Product } from "@/types";
+import type { CartItem, Product, Size } from "@/types";
 
 export interface CartState {
   items: CartItem[];
 }
 
 export interface CartActions {
-  addItem: (product: Product) => void;
-  removeItem: (productId: string) => void;
+  addItem: (product: Product, size: Size) => void;
+  removeItem: (productId: string, size: Size) => void;
   clearCart: () => void;
-  isInCart: (productId: string) => boolean;
+  isInCart: (productId: string, size: Size) => boolean;
 }
 
 export type CartStore = CartState & CartActions;
 
+function lineKey(productId: string, size: Size): string {
+  return `${productId}:${size}`;
+}
+
 export function createCartStore() {
   return createStore<CartStore>()((set, get) => ({
     items: [],
-    addItem: (product) => {
-      if (get().isInCart(product.id)) {
+    addItem: (product, size) => {
+      if (get().isInCart(product.id, size)) {
         return;
       }
 
       set((state) => ({
-        items: [...state.items, { product }],
+        items: [...state.items, { product, size }],
       }));
     },
-    removeItem: (productId) => {
+    removeItem: (productId, size) => {
       set((state) => ({
-        items: state.items.filter((item) => item.product.id !== productId),
+        items: state.items.filter(
+          (item) => !(item.product.id === productId && item.size === size),
+        ),
       }));
     },
     clearCart: () => set({ items: [] }),
-    isInCart: (productId) =>
-      get().items.some((item) => item.product.id === productId),
+    isInCart: (productId, size) =>
+      get().items.some(
+        (item) => item.product.id === productId && item.size === size,
+      ),
   }));
 }
 

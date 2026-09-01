@@ -23,11 +23,6 @@ export default function HomePage() {
   } = usePagination({ products });
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const cartItemIds = useMemo(
-    () => new Set(items.map((item) => item.product.id)),
-    [items],
-  );
-
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
@@ -47,9 +42,9 @@ export default function HomePage() {
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-8 sm:px-6">
         <ProductGrid
           products={pageItems}
-          cartItemIds={cartItemIds}
           onAddToCart={addItem}
           getWantItUrl={buildSingleUrl}
+          isInCart={isInCart}
         />
         <Pagination
           currentPage={currentPage}

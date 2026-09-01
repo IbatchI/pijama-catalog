@@ -1,3 +1,5 @@
+export type Size = "S" | "M" | "L" | "XL";
+
 export interface Product {
   id: string;
   name: string;
@@ -8,4 +10,5 @@ export interface Product {
 
 export interface CartItem {
   product: Product;
+  size: Size;
 }

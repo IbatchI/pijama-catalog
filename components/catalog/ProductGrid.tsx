@@ -7,20 +7,20 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
-import type { Product } from "@/types";
+import type { Product, Size } from "@/types";
 
 interface ProductGridProps {
   products: Product[];
-  cartItemIds: Set<string>;
-  onAddToCart: (product: Product) => void;
-  getWantItUrl: (product: Product) => string;
+  onAddToCart: (product: Product, size: Size) => void;
+  getWantItUrl: (product: Product, size: Size) => string;
+  isInCart: (productId: string, size: Size) => boolean;
 }
 
 export function ProductGrid({
   products,
-  cartItemIds,
   onAddToCart,
   getWantItUrl,
+  isInCart,
 }: ProductGridProps) {
   if (products.length === 0) {
     return (
@@ -42,8 +42,8 @@ export function ProductGrid({
           key={product.id}
           product={product}
           onAddToCart={onAddToCart}
-          wantItUrl={getWantItUrl(product)}
-          isInCart={cartItemIds.has(product.id)}
+          getWantItUrl={getWantItUrl}
+          isInCart={(size) => isInCart(product.id, size)}
         />
       ))}
     </div>

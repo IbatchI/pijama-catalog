@@ -15,6 +15,7 @@ describe("createCartStore", () => {
     const store = createCartStore();
     store.getState().addItem(sampleProduct, "M");
     expect(store.getState().items).toHaveLength(1);
+    expect(store.getState().items[0]?.size).toBe("M");
   });
 
   it("ignores duplicate addItem calls for same product and size", () => {
@@ -24,7 +25,7 @@ describe("createCartStore", () => {
     expect(store.getState().items).toHaveLength(1);
   });
 
-  it("allows same product in two sizes", () => {
+  it("allows same product in different sizes as separate lines", () => {
     const store = createCartStore();
     store.getState().addItem(sampleProduct, "M");
     store.getState().addItem(sampleProduct, "L");
@@ -34,14 +35,17 @@ describe("createCartStore", () => {
   it("removes an item by product id and size", () => {
     const store = createCartStore();
     store.getState().addItem(sampleProduct, "M");
+    store.getState().addItem(sampleProduct, "L");
     store.getState().removeItem(sampleProduct.id, "M");
-    expect(store.getState().items).toHaveLength(0);
+    expect(store.getState().items).toHaveLength(1);
+    expect(store.getState().items[0]?.size).toBe("L");
   });
 
   it("ignores removeItem for unknown product+size", () => {
     const store = createCartStore();
     store.getState().addItem(sampleProduct, "M");
     store.getState().removeItem("unknown", "M");
+    store.getState().removeItem(sampleProduct.id, "L");
     expect(store.getState().items).toHaveLength(1);
   });
 
