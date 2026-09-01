@@ -5,6 +5,11 @@ export const WHATSAPP_PHONE = "5492302354906";
 
 const MAX_LISTED_ITEMS = 15;
 
+function buildItemBlock(item: CartItem, baseUrl: string): string {
+  const imageUrl = `${baseUrl}${item.product.imagePath}`;
+  return `${item.product.name}\n- Talle ${getSizeLabel(item.size)}\n\nVer foto: ${imageUrl}`;
+}
+
 function buildMessageBody(
   items: CartItem[],
   siteBaseUrl: string,
@@ -13,18 +18,15 @@ function buildMessageBody(
   const listedItems = items.slice(0, MAX_LISTED_ITEMS);
   const remaining = items.length - listedItems.length;
 
-  const lines = listedItems.map((item, index) => {
-    const imageUrl = `${baseUrl}${item.product.imagePath}`;
-    return `${index + 1}. ${item.product.name}\n   Talle: ${getSizeLabel(item.size)}\n   📷 ${imageUrl}`;
-  });
+  const blocks = listedItems.map((item) => buildItemBlock(item, baseUrl));
 
-  let message = `Hola! Me interesan estos pijamas:\n\n${lines.join("\n\n")}`;
+  let message = `🛍️ NUEVO PEDIDO\n\n${blocks.join("\n\n")}`;
 
   if (remaining > 0) {
     message += `\n\n... y ${remaining} más.\nVer catálogo completo: ${baseUrl}`;
   }
 
-  message += `\n\nTotal: ${items.length} pijama(s) seleccionado(s) ✨`;
+  message += `\n\nTotal: ${items.length} pijama(s) seleccionado(s)`;
   return message;
 }
 

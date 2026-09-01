@@ -28,45 +28,53 @@ function makeItem(
 }
 
 describe("buildWhatsAppUrl", () => {
-  it("builds a single-item URL with product name, size, and image", () => {
+  it("builds a single-item order message with new format", () => {
     const url = buildWhatsAppUrl(
-      [makeItem("1", "Pijama Floral", "/images/a.jpg", "M")],
+      [makeItem("1", "Pijama #67", "/images/a.jpg", "XL")],
       phone,
       site,
     );
 
     expect(url.startsWith(`https://wa.me/${phone}?text=`)).toBe(true);
     const decoded = decodeURIComponent(url);
-    expect(decoded).toContain("Pijama Floral");
-    expect(decoded).toContain("Talle: M 42/44");
-    expect(decoded).toContain(`${site}/images/a.jpg`);
+    expect(decoded).toContain("🛍️ NUEVO PEDIDO");
+    expect(decoded).toContain("Pijama #67");
+    expect(decoded).toContain("- Talle XL 50/52");
+    expect(decoded).toContain(`Ver foto: ${site}/images/a.jpg`);
+    expect(decoded).toContain("Total: 1 pijama(s) seleccionado(s)");
+    expect(decoded).not.toContain("Hola!");
+    expect(decoded).not.toContain("📷");
+    expect(decoded).not.toContain("✨");
+    expect(decoded).not.toContain("1. Pijama");
   });
 
-  it("includes XL size label in message", () => {
-    const url = buildWhatsAppUrl(
-      [makeItem("1", "Pijama XL", "/images/xl.jpg", "XL")],
-      phone,
-      site,
+  it("includes bullet talle for M size", () => {
+    const decoded = decodeURIComponent(
+      buildWhatsAppUrl(
+        [makeItem("1", "Pijama Floral", "/images/a.jpg", "M")],
+        phone,
+        site,
+      ),
     );
-
-    expect(decodeURIComponent(url)).toContain("Talle: XL 50/52");
+    expect(decoded).toContain("- Talle M 42/44");
   });
 
-  it("builds a multi-item message with size per entry", () => {
+  it("builds a multi-item message with one header and shared footer", () => {
     const items = [
       makeItem("1", "Pijama A", "/images/a.jpg", "M"),
       makeItem("2", "Pijama B", "/images/b.jpg", "S"),
-      makeItem("3", "Pijama C", "/images/c.jpg", "L"),
     ];
 
     const decoded = decodeURIComponent(buildWhatsAppUrl(items, phone, site));
-    expect(decoded).toContain("1. Pijama A");
-    expect(decoded).toContain("Talle: M 42/44");
-    expect(decoded).toContain("2. Pijama B");
-    expect(decoded).toContain("Talle: S 38/40");
-    expect(decoded).toContain("3. Pijama C");
-    expect(decoded).toContain("Talle: L 46/48");
-    expect(decoded).toContain("Total: 3 pijama(s) seleccionado(s)");
+    expect(decoded.match(/🛍️ NUEVO PEDIDO/g)?.length).toBe(1);
+    expect(decoded).toContain("Pijama A");
+    expect(decoded).toContain("- Talle M 42/44");
+    expect(decoded).toContain("Pijama B");
+    expect(decoded).toContain("- Talle S 38/40");
+    expect(decoded).toContain(`Ver foto: ${site}/images/a.jpg`);
+    expect(decoded).toContain(`Ver foto: ${site}/images/b.jpg`);
+    expect(decoded).toContain("Total: 2 pijama(s) seleccionado(s)");
+    expect(decoded).not.toContain("1. Pijama");
   });
 
   it("truncates listing after 15 items and adds overflow note", () => {
@@ -75,10 +83,11 @@ describe("buildWhatsAppUrl", () => {
     );
 
     const decoded = decodeURIComponent(buildWhatsAppUrl(items, phone, site));
-    expect(decoded).toContain("15. Pijama 14");
-    expect(decoded).not.toContain("16. Pijama 15");
+    expect(decoded).toContain("Pijama 14");
+    expect(decoded).not.toContain("Pijama 15");
     expect(decoded).toContain("... y 1 más.");
     expect(decoded).toContain(`Ver catálogo completo: ${site}`);
+    expect(decoded).toContain("Total: 16 pijama(s) seleccionado(s)");
   });
 
   it("returns empty string for empty cart", () => {
