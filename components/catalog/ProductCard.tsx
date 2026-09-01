@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SIZE_OPTIONS } from "@/data/sizes";
 import { useSizeSelection } from "@/hooks/use-size-selection";
-import { Check, ShoppingBag } from "lucide-react";
+import { Check, ShoppingBag, ZoomIn } from "lucide-react";
 import type { Product, Size } from "@/types";
 
 interface ProductCardProps {
@@ -15,6 +15,7 @@ interface ProductCardProps {
   onAddToCart: (product: Product, size: Size) => void;
   getWantItUrl: (product: Product, size: Size) => string;
   isInCart: (size: Size) => boolean;
+  onPreview: (product: Product) => void;
 }
 
 export function ProductCard({
@@ -22,6 +23,7 @@ export function ProductCard({
   onAddToCart,
   getWantItUrl,
   isInCart,
+  onPreview,
 }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const { selectedSize, selectSize, hasSelection } = useSizeSelection();
@@ -40,14 +42,24 @@ export function ProductCard({
               Imagen no disponible
             </div>
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={product.imagePath}
-              alt={product.name}
-              className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              loading="lazy"
-              onError={() => setImageError(true)}
-            />
+            <button
+              type="button"
+              className="group/photo relative size-full cursor-zoom-in"
+              aria-label={`Ver foto ampliada de ${product.name}`}
+              onClick={() => onPreview(product)}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={product.imagePath}
+                alt=""
+                className="size-full object-cover transition-transform duration-500 group-hover/photo:scale-[1.03]"
+                loading="lazy"
+                onError={() => setImageError(true)}
+              />
+              <span className="pointer-events-none absolute inset-0 hidden items-center justify-center bg-foreground/40 opacity-0 transition-opacity md:flex md:group-hover/photo:opacity-100">
+                <ZoomIn className="size-8 text-background" aria-hidden="true" />
+              </span>
+            </button>
           )}
         </div>
       </CardContent>

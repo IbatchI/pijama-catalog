@@ -1,5 +1,6 @@
 "use client";
 
+import { ImagePreviewDialog } from "@/components/catalog/ImagePreviewDialog";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import {
   Empty,
@@ -7,6 +8,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { useImagePreview } from "@/hooks/use-image-preview";
 import type { Product, Size } from "@/types";
 
 interface ProductGridProps {
@@ -22,6 +24,8 @@ export function ProductGrid({
   getWantItUrl,
   isInCart,
 }: ProductGridProps) {
+  const { product, isOpen, open, close } = useImagePreview();
+
   if (products.length === 0) {
     return (
       <Empty className="border border-dashed border-border py-16">
@@ -36,16 +40,20 @@ export function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      {products.map((product) => (
-        <ProductCard
-          key={product.id}
-          product={product}
-          onAddToCart={onAddToCart}
-          getWantItUrl={getWantItUrl}
-          isInCart={(size) => isInCart(product.id, size)}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {products.map((item) => (
+          <ProductCard
+            key={item.id}
+            product={item}
+            onAddToCart={onAddToCart}
+            getWantItUrl={getWantItUrl}
+            isInCart={(size) => isInCart(item.id, size)}
+            onPreview={open}
+          />
+        ))}
+      </div>
+      <ImagePreviewDialog product={product} open={isOpen} onClose={close} />
+    </>
   );
 }
