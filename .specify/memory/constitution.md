@@ -1,13 +1,12 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.0 → 1.2.0
+Version change: 1.2.0 → 1.3.0
 Modified principles:
-  - III. Card-Grid Catalog UI → expanded with size pills + conditional CTAs
-  - II. WhatsApp-Driven Commerce → message MUST include selected size per item
-  - IV. Cart & Checkout Simplicity → cart items MUST carry size; one size per line item
+  - III. Card-Grid Catalog UI → added image preview interaction (tap/click, hover zoom affordance)
 Added sections:
-  - Size catalog (fixed enum) under Tech Stack & Constraints
+  - Image preview requirements under Principle III
+  - Image preview accessibility note under Development Workflow
 Removed sections: N/A
 Deferred TODOs:
   - WHATSAPP_PHONE_NUMBER: Owner must supply the destination WhatsApp number in .env / config
@@ -59,6 +58,24 @@ The catalog MUST be rendered as a responsive grid of product cards. Each card MU
   constitution. Exactly one size MAY be selected at a time per card.
 - "Agregar al carrito" and "Lo quiero" actions — visible ONLY after the user selects a size.
 
+#### Image preview
+
+The product photo MUST support an in-page preview so users can inspect the garment before
+ordering. This interaction MUST be responsive across mobile, tablet, and desktop viewports.
+
+- **Activation**: Tapping or clicking the product photo MUST open a preview overlay
+  (lightbox/modal) showing the full-resolution image with aspect ratio preserved.
+- **Desktop affordance**: On viewports that support hover (typically `md` and above), hovering
+  the product photo MUST reveal a zoom icon overlay so users discover the preview interaction
+  before clicking. The icon MUST be visible without obscuring the product image entirely.
+- **Dismissal**: The preview MUST be dismissible via a close control, tapping/clicking the
+  backdrop, and the Escape key on keyboard-capable devices.
+- **Accessibility**: The photo trigger MUST expose an accessible name (e.g. "Ver foto ampliada
+  de {product name}"). The preview overlay MUST trap focus while open and return focus to the
+  trigger on close.
+- **No navigation**: Opening or closing the preview MUST NOT navigate away from the catalog page
+  or reset pagination, cart state, or size selection on the originating card.
+
 Size pills MUST use the following fixed labels (non-configurable without a constitution
 amendment):
 
@@ -78,6 +95,9 @@ ample white space — no loud or decorative motifs.
 
 **Rationale**: Requiring size selection before any purchase action reduces order errors
 and incomplete WhatsApp messages. Pills are compact, touch-friendly, and familiar on mobile.
+Image preview lets buyers confirm fabric, print, and fit details without leaving the catalog;
+the hover zoom affordance on desktop makes the interaction discoverable without adding clutter
+on touch devices.
 
 ### IV. Cart & Checkout Simplicity
 
@@ -124,6 +144,10 @@ Custom hooks (`useCart`, `usePagination`, `useWhatsApp`, `useSizeSelection`) are
 ONLY bridge between state/logic and the component layer. Components that contain `if`
 branches for non-render logic are a violation of this principle and MUST be refactored.
 
+Preview open/close state MAY live in a dedicated hook (e.g. `useImagePreview`) or in a
+focused sub-component, but MUST NOT be inlined as ad-hoc state scattered across unrelated
+components.
+
 The design system MUST be defined in a single CSS file (`app/globals.css`) using
 Tailwind v4 CSS variables. No raw color values, no `dark:` prefixes, and no `style=`
 props in components. Semantic tokens (`bg-primary`, `text-muted-foreground`) are the
@@ -148,7 +172,12 @@ grows. A centralized, token-based theme lets the owner retheme the entire app by
   constitution amendment.
 - **Images**: Source photos live in `public/images/` (copied from the `Fotos pijamas` folder).
   Images MUST be served from the same static host so their public URLs can be embedded in
-  WhatsApp messages.
+  WhatsApp messages. Product-card preview MUST reuse the same static image source; no
+  separate CDN or dynamic image API is required for v1.
+- **Image preview UI**: Implement as a client-side overlay (dialog/lightbox) using existing
+  design-system primitives where possible (e.g. shadcn `Dialog`). Hover zoom affordance MUST
+  use CSS hover on `md+` breakpoints only; touch devices MUST NOT depend on hover to access
+  preview.
 - **WhatsApp integration**: Use `wa.me/<PHONE>?text=<encoded_message>` deep-links for
   zero-dependency integration. If richer media embedding is required, evaluate the Meta
   WhatsApp Business Cloud API (requires approval) or a gateway such as Twilio/360dialog.
@@ -169,6 +198,9 @@ grows. A centralized, token-based theme lets the owner retheme the entire app by
 - The static build MUST pass without errors before any deployment.
 - WhatsApp link construction logic MUST be unit-tested with at least one happy-path test
   covering the multi-item cart scenario including size labels.
+- Image preview MUST be manually verified on at least one mobile viewport and one desktop
+  viewport before merge: tap/click opens preview; desktop hover shows zoom icon; Escape and
+  backdrop dismiss work; cart and size selection on the card are unchanged after closing.
 
 ## Governance
 
@@ -184,4 +216,4 @@ All contributors MUST verify compliance with these principles during code review
 Complexity introductions (new dependencies, server-side logic, auth, etc.) MUST be justified
 against these principles before merging.
 
-**Version**: 1.2.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-08-31
+**Version**: 1.3.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-01
