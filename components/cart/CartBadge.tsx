@@ -13,15 +13,15 @@ export function CartBadge({ count, onClick }: CartBadgeProps) {
   return (
     <Button
       type="button"
-      variant="ghost"
-      className="relative"
+      variant={count > 0 ? "default" : "outline"}
+      className="relative rounded-full"
       aria-label={`Ver carrito, ${count} productos`}
       onClick={onClick}
     >
       <ShoppingBagIcon data-icon="inline-start" />
       Carrito
       {count > 0 ? (
-        <Badge className="absolute -top-1 -right-1 min-w-5 justify-center px-1">
+        <Badge variant="secondary" className="ml-1 min-w-5 justify-center px-1">
           {count}
         </Badge>
       ) : null}

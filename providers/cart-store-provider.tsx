@@ -3,7 +3,7 @@
 import {
   createContext,
   useContext,
-  useRef,
+  useState,
   type ReactNode,
 } from "react";
 import { useStore } from "zustand";
@@ -17,14 +17,10 @@ import {
 const CartStoreContext = createContext<CartStoreApi | null>(null);
 
 export function CartStoreProvider({ children }: { children: ReactNode }) {
-  const storeRef = useRef<CartStoreApi | null>(null);
-
-  if (!storeRef.current) {
-    storeRef.current = createCartStore();
-  }
+  const [store] = useState<CartStoreApi>(() => createCartStore());
 
   return (
-    <CartStoreContext.Provider value={storeRef.current}>
+    <CartStoreContext.Provider value={store}>
       {children}
     </CartStoreContext.Provider>
   );

@@ -24,7 +24,7 @@ export function ProductGrid({
 }: ProductGridProps) {
   if (products.length === 0) {
     return (
-      <Empty className="border border-dashed border-border">
+      <Empty className="border border-dashed border-border py-16">
         <EmptyHeader>
           <EmptyTitle>No hay productos</EmptyTitle>
           <EmptyDescription>
@@ -36,7 +36,7 @@ export function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-[var(--spacing-card-gap)] md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {products.map((product) => (
         <ProductCard
           key={product.id}
